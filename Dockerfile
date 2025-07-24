@@ -34,4 +34,4 @@ EXPOSE 10000
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Chạy Flask app bằng Gunicorn (production-ready WSGI server)
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} app:app"]
+CMD ["sh", "-c", "gunicorn --timeout 120 --bind 0.0.0.0:${PORT:-10000} app:app"]

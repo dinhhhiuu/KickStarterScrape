@@ -46,21 +46,34 @@ def scrape_kickstarter(url):
     html, html2 = "", ""
 
     # Get Info
-    driver1 = get_driver()
-    driver2 = get_driver()
-    try:
-        driver1.get(url)
-        time.sleep(5)
-        html = driver1.page_source
-    finally:
-        driver1.quit()
+    # driver1 = get_driver()
+    # driver2 = get_driver()
+    # try:
+    #     driver1.get(url)
+    #     time.sleep(5)
+    #     html = driver1.page_source
+    # finally:
+    #     driver1.quit()
     
+    # try:
+    #     driver2.get(url2)
+    #     time.sleep(5)
+    #     html2 = driver2.page_source
+    # finally:
+    #     driver2.quit()
+    driver = get_driver()
+
     try:
-        driver2.get(url2)
+        driver.get(url)
         time.sleep(5)
-        html2 = driver2.page_source
+        html = driver.page_source
+
+        driver.get(url2)
+        time.sleep(5)
+        html2 = driver.page_source
     finally:
-        driver2.quit()
+        driver.quit()
+
     
     if not html or not html2:
         return None
