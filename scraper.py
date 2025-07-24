@@ -1,33 +1,27 @@
-# from selenium import webdriver
-# from selenium.webdriver.chrome.service import Service
-# from selenium.webdriver.chrome.options import Options
-# from webdriver_manager.chrome import ChromeDriverManager
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
-import json
 import os
 import re
-import undetected_chromedriver as uc
+
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set up driver
-# def get_driver():
-#     options = Options()
-#     options.add_argument("--disable-blink-features=AutomationControlled")
-#     options.add_argument("--headless=new")
-#     options.add_argument("--no-sandbox")
-#     options.add_argument("--disable-dev-shm-usage")
-#     options.add_argument("user-agent=Mozilla/5.0")
-#     service = Service(ChromeDriverManager().install())
-#     return webdriver.Chrome(service=service, options=options)
 def get_driver():
-    options = uc.ChromeOptions()
-    options.headless = True  # Render không có giao diện
+    options = Options()
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
-    driver = uc.Chrome(options=options)
-    return driver
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=options)
 
 # Scrape Kickstarter
 def scrape_kickstarter(url):
@@ -175,21 +169,10 @@ def scrape_kickstarter(url):
     item["Rewards"] = "None"
     item["LINK"] = url
 
-    # Open file JSON
-    filename = "data/data.json"
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                data = []
-    else:
-        data = []
-
-    data.append(item)
-
-    # Save JSON
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-
-    print("Đã lưu vào file data.json!")
+    # Save to MongoDB
+    mongo_uri = os.getenv("MONGO_URI")
+    client = MongoClient(mongo_uri)
+    db = client["kickstarter"]
+    collection = db["projects"]
+    collection.insert_one(item)
+    print("✅ Đã lưu vào MongoDB")
