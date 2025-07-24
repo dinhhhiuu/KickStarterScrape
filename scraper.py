@@ -13,13 +13,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set up driver
+# def get_driver():
+#     options = Options()
+#     options.add_argument("--disable-blink-features=AutomationControlled")
+#     options.add_argument("--headless=new")
+#     options.add_argument("--no-sandbox")
+#     options.add_argument("--disable-dev-shm-usage")
+#     options.add_argument("user-agent=Mozilla/5.0")
+#     service = Service(ChromeDriverManager().install())
+#     return webdriver.Chrome(service=service, options=options)
 def get_driver():
     options = Options()
+    options.binary_location = os.getenv("CHROME_BINARY", "/usr/bin/chromium")  # ← phải khớp với Dockerfile
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--headless=new")
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0")
+    
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
