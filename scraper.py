@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 import os
@@ -22,17 +22,22 @@ load_dotenv()
 #     options.add_argument("user-agent=Mozilla/5.0")
 #     service = Service(ChromeDriverManager().install())
 #     return webdriver.Chrome(service=service, options=options)
+
 def get_driver():
     options = Options()
-    options.binary_location = os.getenv("CHROME_BINARY", "/usr/bin/chromium")  # ← phải khớp với Dockerfile
-    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.binary_location = os.getenv("CHROME_BINARY", "/usr/bin/chromium")
     options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
-    
-    service = Service(ChromeDriverManager().install())
+
+    # KHÔNG dùng ChromeDriverManager nữa, trỏ trực tiếp tới chromedriver đã cài trong Docker
+    service = Service("/usr/bin/chromedriver")
+
     return webdriver.Chrome(service=service, options=options)
+
 
 # Scrape Kickstarter
 def scrape_kickstarter(url):

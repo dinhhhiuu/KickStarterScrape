@@ -27,11 +27,11 @@ ENV CHROME_BINARY=/usr/bin/chromium
 WORKDIR /app
 COPY . /app
 
-# Expose port
+# Expose port (Render sẽ set biến môi trường PORT)
 EXPOSE 10000
 
 # Cài Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Chạy Flask app
-CMD ["python", "app.py"]
+# Chạy Flask app bằng Gunicorn (WSGI server)
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
