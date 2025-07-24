@@ -42,8 +42,9 @@ def get_driver():
 # Scrape Kickstarter
 def scrape_kickstarter(url):
     # Handle URL
-    url2 = url.split("?")[0] + "/creator"
-    html, html2 = "", ""
+    # url2 = url.split("?")[0] + "/creator"
+    # html, html2 = "", ""
+    html = ""
 
     # Get Info
     # driver1 = get_driver()
@@ -68,19 +69,20 @@ def scrape_kickstarter(url):
         time.sleep(5)
         html = driver.page_source
 
-        driver.get(url2)
-        time.sleep(5)
-        html2 = driver.page_source
+        # driver.get(url2)
+        # time.sleep(5)
+        # html2 = driver.page_source
     finally:
         driver.quit()
 
     
-    if not html or not html2:
+    # if not html or not html2:
+    if not html:
         return None
     
     # Parse
     soup = BeautifulSoup(html, "html.parser")
-    soup2 = BeautifulSoup(html2, "html.parser")
+    # soup2 = BeautifulSoup(html2, "html.parser")
 
     # Get Data first page
     name_project = soup.find_all('span', class_='relative')
@@ -96,9 +98,9 @@ def scrape_kickstarter(url):
     staff_pick = soup.find_all('a', class_='grey-dark mr3 nowrap type-12 flex items-center')
 
     # Get Data second page
-    create_num = soup2.find_all('span', class_='kds-type kds-type-heading-lg')
-    back_num = soup2.find_all('span', class_='kds-type kds-type-heading-sm')
-    single_person_creator = soup2.find_all('div', 'text-preline do-not-visually-track kds-type kds-type-body-md')
+    # create_num = soup2.find_all('span', class_='kds-type kds-type-heading-lg')
+    # back_num = soup2.find_all('span', class_='kds-type kds-type-heading-sm')
+    # single_person_creator = soup2.find_all('div', 'text-preline do-not-visually-track kds-type kds-type-body-md')
 
     # Generate Dict object
     item = {}
@@ -122,23 +124,27 @@ def scrape_kickstarter(url):
         clean_country_main_text = ''.join(country_main_text).strip()
         item["Country"] = clean_country_main_text if clean_country_main_text else "N/A"
 
-    if single_person_creator:
-        item["single-person creator"] = single_person_creator[0].get_text(strip=True)
+    # if single_person_creator:
+    #     item["single-person creator"] = single_person_creator[0].get_text(strip=True)
+    item["single-person creator"] = "None"
 
-    if create_num:
-        create_num_text = create_num[0].get_text(strip=True)
-        item["Create Num"] = create_num_text.split(" ")[0]
+    # if create_num:
+    #     create_num_text = create_num[0].get_text(strip=True)
+    #     item["Create Num"] = create_num_text.split(" ")[0]
+    item["Create Num"] = "None"
 
-    if back_num:
-        back_num_text = back_num[0].get_text(strip=True)
-        item["Back Num"] = back_num_text.split(" ")[0]
+    # if back_num:
+    #     back_num_text = back_num[0].get_text(strip=True)
+    #     item["Back Num"] = back_num_text.split(" ")[0]
+    item["Back Num"] = "None"
 
-    if create_num and back_num:
-        create_num_text = create_num[0].get_text(strip=True)
-        back_num_text = back_num[0].get_text(strip=True)
-        create_num_text_split = create_num_text.split(" ")[0]
-        back_num_text_split = back_num_text.split(" ")[0]
-        item["Projects Created / Funded"] = int(create_num_text_split) + int(back_num_text_split)
+    # if create_num and back_num:
+    #     create_num_text = create_num[0].get_text(strip=True)
+    #     back_num_text = back_num[0].get_text(strip=True)
+    #     create_num_text_split = create_num_text.split(" ")[0]
+    #     back_num_text_split = back_num_text.split(" ")[0]
+    #     item["Projects Created / Funded"] = int(create_num_text_split) + int(back_num_text_split)
+    item["Projects Created / Funded"] = "None"
     
     item["Gender"] = "None"
 
