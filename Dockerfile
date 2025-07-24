@@ -33,5 +33,5 @@ EXPOSE 10000
 # Cài Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Chạy Flask app bằng Gunicorn (WSGI server)
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+# Chạy Flask app bằng Gunicorn (production-ready WSGI server)
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-10000} app:app"]

@@ -60,6 +60,5 @@ def index():
     return render_template("index.html")
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))  # Render sẽ set PORT env
+    port = int(os.environ.get("PORT", 10000))  # Nếu PORT không có thì dùng 10000 mặc định
     app.run(host="0.0.0.0", port=port)
