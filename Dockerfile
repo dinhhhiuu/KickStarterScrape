@@ -27,6 +27,9 @@ ENV CHROME_BINARY=/usr/bin/chromium
 WORKDIR /app
 COPY . /app
 
+# Expose port
+EXPOSE 10000
+
 # Cài Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
