@@ -1,23 +1,33 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+# from selenium import webdriver
+# from selenium.webdriver.chrome.service import Service
+# from selenium.webdriver.chrome.options import Options
+# from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 import json
 import os
 import re
+import undetected_chromedriver as uc
 
 # Set up driver
+# def get_driver():
+#     options = Options()
+#     options.add_argument("--disable-blink-features=AutomationControlled")
+#     options.add_argument("--headless=new")
+#     options.add_argument("--no-sandbox")
+#     options.add_argument("--disable-dev-shm-usage")
+#     options.add_argument("user-agent=Mozilla/5.0")
+#     service = Service(ChromeDriverManager().install())
+#     return webdriver.Chrome(service=service, options=options)
 def get_driver():
-    options = Options()
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--headless=new")
+    options = uc.ChromeOptions()
+    options.headless = True  # Render không có giao diện
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
-    service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
+    driver = uc.Chrome(options=options)
+    return driver
 
 # Scrape Kickstarter
 def scrape_kickstarter(url):
