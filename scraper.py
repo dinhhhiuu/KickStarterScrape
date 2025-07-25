@@ -1,88 +1,55 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-# from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import time
-import os
-import re
-
 from pymongo import MongoClient
+import openpyxl
+import time
+import re
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
-
-# Set up driver
-# def get_driver():
-#     options = Options()
-#     options.add_argument("--disable-blink-features=AutomationControlled")
-#     options.add_argument("--headless=new")
-#     options.add_argument("--no-sandbox")
-#     options.add_argument("--disable-dev-shm-usage")
-#     options.add_argument("user-agent=Mozilla/5.0")
-#     service = Service(ChromeDriverManager().install())
-#     return webdriver.Chrome(service=service, options=options)
+mongo_uri = os.getenv("MONGO_URI")
 
 def get_driver():
     options = Options()
-    options.binary_location = os.getenv("CHROME_BINARY", "/usr/bin/chromium")
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
+    options.headless = True
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
-
-    # KHÔNG dùng ChromeDriverManager nữa, trỏ trực tiếp tới chromedriver đã cài trong Docker
-    service = Service("/usr/bin/chromedriver")
-
+    service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
-
-# Scrape Kickstarter
 def scrape_kickstarter(url):
     # Handle URL
-    # url2 = url.split("?")[0] + "/creator"
-    # html, html2 = "", ""
-    html = ""
+    url2 = url.split("?")[0] + "/creator"
+    html, html2 = "", ""
 
     # Get Info
-    # driver1 = get_driver()
-    # driver2 = get_driver()
-    # try:
-    #     driver1.get(url)
-    #     time.sleep(5)
-    #     html = driver1.page_source
-    # finally:
-    #     driver1.quit()
-    
-    # try:
-    #     driver2.get(url2)
-    #     time.sleep(5)
-    #     html2 = driver2.page_source
-    # finally:
-    #     driver2.quit()
-    driver = get_driver()
-
+    driver1 = get_driver()
+    driver2 = get_driver()
     try:
-        driver.get(url)
+        driver1.get(url)
         time.sleep(5)
-        html = driver.page_source
-
-        # driver.get(url2)
-        # time.sleep(5)
-        # html2 = driver.page_source
+        html = driver1.page_source
     finally:
-        driver.quit()
-
+        driver1.quit()
     
-    # if not html or not html2:
-    if not html:
+    try:
+        driver2.get(url2)
+        time.sleep(5)
+        html2 = driver2.page_source
+    finally:
+        driver2.quit()
+    
+    if not html or not html2:
         return None
     
     # Parse
     soup = BeautifulSoup(html, "html.parser")
-    # soup2 = BeautifulSoup(html2, "html.parser")
+    soup2 = BeautifulSoup(html2, "html.parser")
 
     # Get Data first page
     name_project = soup.find_all('span', class_='relative')
@@ -98,11 +65,10 @@ def scrape_kickstarter(url):
     staff_pick = soup.find_all('a', class_='grey-dark mr3 nowrap type-12 flex items-center')
 
     # Get Data second page
-    # create_num = soup2.find_all('span', class_='kds-type kds-type-heading-lg')
-    # back_num = soup2.find_all('span', class_='kds-type kds-type-heading-sm')
-    # single_person_creator = soup2.find_all('div', 'text-preline do-not-visually-track kds-type kds-type-body-md')
+    create_num = soup2.find_all('span', class_='kds-type kds-type-heading-lg')
+    back_num = soup2.find_all('span', class_='kds-type kds-type-heading-sm')
+    single_person_creator = soup2.find_all('div', 'text-preline do-not-visually-track kds-type kds-type-body-md')
 
-    # Generate Dict object
     item = {}
     if name_project:
         name_project_main = name_project[0].find_all("a", class_='hero__link')
@@ -124,27 +90,23 @@ def scrape_kickstarter(url):
         clean_country_main_text = ''.join(country_main_text).strip()
         item["Country"] = clean_country_main_text if clean_country_main_text else "N/A"
 
-    # if single_person_creator:
-    #     item["single-person creator"] = single_person_creator[0].get_text(strip=True)
-    item["single-person creator"] = "None"
+    if single_person_creator:
+        item["single-person creator"] = single_person_creator[0].get_text(strip=True)
 
-    # if create_num:
-    #     create_num_text = create_num[0].get_text(strip=True)
-    #     item["Create Num"] = create_num_text.split(" ")[0]
-    item["Create Num"] = "None"
+    if create_num:
+        create_num_text = create_num[0].get_text(strip=True)
+        item["Create Num"] = create_num_text.split(" ")[0]
 
-    # if back_num:
-    #     back_num_text = back_num[0].get_text(strip=True)
-    #     item["Back Num"] = back_num_text.split(" ")[0]
-    item["Back Num"] = "None"
+    if back_num:
+        back_num_text = back_num[0].get_text(strip=True)
+        item["Back Num"] = back_num_text.split(" ")[0]
 
-    # if create_num and back_num:
-    #     create_num_text = create_num[0].get_text(strip=True)
-    #     back_num_text = back_num[0].get_text(strip=True)
-    #     create_num_text_split = create_num_text.split(" ")[0]
-    #     back_num_text_split = back_num_text.split(" ")[0]
-    #     item["Projects Created / Funded"] = int(create_num_text_split) + int(back_num_text_split)
-    item["Projects Created / Funded"] = "None"
+    if create_num and back_num:
+        create_num_text = create_num[0].get_text(strip=True)
+        back_num_text = back_num[0].get_text(strip=True)
+        create_num_text_split = create_num_text.split(" ")[0]
+        back_num_text_split = back_num_text.split(" ")[0]
+        item["Projects Created / Funded"] = str(int(create_num_text_split) + int(back_num_text_split))
     
     item["Gender"] = "None"
 
@@ -187,10 +149,10 @@ def scrape_kickstarter(url):
             goal_amount = int(''.join(re.findall(r'\d+', goal_text)))
             pledged_amount = int(''.join(re.findall(r'\d+', pledged_text)))
 
-            item["State"] = 1 if pledged_amount > goal_amount else 0
+            item["State"] = "1" if pledged_amount > goal_amount else "0"
     if videos:
         amount_videos = len(videos)
-        item["Videos"] = str(amount_videos) if amount_videos > 0 else "0"
+        item["Videos"] = "1" if amount_videos > 0 else "0"
 
     if comments:
         comments_main = comments[0].find_all('span', class_='count')
@@ -204,10 +166,26 @@ def scrape_kickstarter(url):
     item["Rewards"] = "None"
     item["LINK"] = url
 
-    # Save to MongoDB
-    mongo_uri = os.getenv("MONGO_URI")
     client = MongoClient(mongo_uri)
     db = client["kickstarter"]
     collection = db["projects"]
     collection.insert_one(item)
-    print("✅ Đã lưu vào MongoDB")
+
+def export_to_excel():
+    client = MongoClient(mongo_uri)
+    db = client["kickstarter"]
+    collection = db["projects"]
+    data = list(collection.find({}, {"_id": 0}))
+
+    if not data:
+        raise Exception("Không có dữ liệu!")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    headers = list(data[0].keys())
+    ws.append(headers)
+
+    for row in data:
+        ws.append([row.get(h, "") for h in headers])
+
+    wb.save("kickstarter_data.xlsx")

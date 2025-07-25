@@ -1,64 +1,35 @@
-from flask import Flask, render_template, request, send_file
-from scraper import scrape_kickstarter
-import io
-import openpyxl
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
+import tkinter as tk
+from tkinter import messagebox
+from scraper import scrape_kickstarter, export_to_excel
 
-load_dotenv()
-app = Flask(__name__)
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "POST":
-        action = request.form.get("action")
-        url = request.form.get("url")
-
-        if action == "scrape" and url:
+def scrape_action():
+    url = url_entry.get()
+    if url:
+        try:
             scrape_kickstarter(url)
-            return render_template("index.html", message="✅ Đã lưu vào MongoDB!")
+            messagebox.showinfo("Thành công", "✅ Dữ liệu đã được lưu vào MongoDB!")
+        except Exception as e:
+            messagebox.showerror("Lỗi", str(e))
+    else:
+        messagebox.showwarning("Cảnh báo", "Vui lòng nhập URL!")
 
-        elif action == "xlsx":
-            try:
-                # Kết nối MongoDB
-                client = MongoClient(os.getenv("MONGO_URI"))
-                db = client["kickstarter"]
-                collection = db["projects"]
-                data = list(collection.find({}, {"_id": 0}))
+def export_action():
+    try:
+        export_to_excel()
+        messagebox.showinfo("Xuất Excel", "✅ Đã xuất file kickstarter_data.xlsx!")
+    except Exception as e:
+        messagebox.showerror("Lỗi", str(e))
 
-                if not data:
-                    return "❌ Không có dữ liệu để export!"
+# Tkinter GUI
+app = tk.Tk()
+app.title("Kickstarter Scraper")
+app.geometry("400x200")
 
-                # Tạo Excel trong bộ nhớ
-                wb = openpyxl.Workbook()
-                ws = wb.active
-                ws.title = "Kickstarter Data"
+tk.Label(app, text="Nhập URL Kickstarter:").pack(pady=5)
+url_entry = tk.Entry(app, width=50)
+url_entry.pack(pady=5)
 
-                headers = list(data[0].keys())
-                ws.append(headers)
+tk.Button(app, text="Scrape", command=scrape_action).pack(pady=10)
+tk.Button(app, text="Export to Excel", command=export_action).pack(pady=5)
 
-                for item in data:
-                    row = [item.get(key, "") for key in headers]
-                    ws.append(row)
-
-                # Ghi vào bộ nhớ
-                file_stream = io.BytesIO()
-                wb.save(file_stream)
-                file_stream.seek(0)
-
-                return send_file(
-                    file_stream,
-                    as_attachment=True,
-                    download_name="kickstarter_data.xlsx",
-                    mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-            except Exception as e:
-                return f"Lỗi khi export: {e}"
-
-    return render_template("index.html")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Nếu PORT không có thì dùng 10000 mặc định
-    app.run(host="0.0.0.0", port=port)
+app.mainloop()
